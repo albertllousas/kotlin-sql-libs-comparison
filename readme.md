@@ -21,6 +21,17 @@ And this is the **domain** that we are going to use:
 
 DB model and domain are not the same, they diverge.
 
+The [domain](./src/main/kotlin/com/alo/sqllibscomparison/domain/TodoList.kt) in kotlin is pretty simple:
+```kotlin
+data class TodoList(val id: TodoListId, val name: String, val tasks: List<Task>)
+
+inline class TodoListId(val value: UUID)
+
+data class Task(val name: String, val status: Status)
+
+enum class Status { TODO, DONE }
+```
+
 With this simple problem we will tackle different problems that you always face when you are have to integrate with a
  SQL library like, how easy is to use, SQL generation, model mapping, maintainability, testability ... 
 
@@ -38,7 +49,7 @@ To see how flexible these libs are, let's imagine some use-cases that will force
 * Search and paginate todo lists: Conditional and dynamic querying
 * Since we will always access to an aggregate root, all queries will imply one-to-many joins: 1+n query problem
 
-To make it easy and consistent implementations should implement [interfaces](./src/main/kotlin/com/alo/sqllibscomparison/domain/boundary/):
+To make it easy and consistent, implementations should implement [interfaces](./src/main/kotlin/com/alo/sqllibscomparison/domain/boundary/):
 ```kotlin
 interface TodoListFinder {
     fun listAll() : List<TodoList>
