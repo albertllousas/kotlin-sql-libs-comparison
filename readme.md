@@ -124,11 +124,11 @@ All the project is based on tests, so to run it just:
 ### Collaborating
 If you want to add your fancy SQL lib.
 1. Add your impl to: 
-`/src/main/kotlin/com/alo/sqllibscomparison/infrastructure/persistence`
+[`/src/main/kotlin/com/alo/sqllibscomparison/infrastructure/persistence`](/src/main/kotlin/com/alo/sqllibscomparison/infrastructure/persistence)
 2. Implement the interfaces declared in:
-`/src/main/kotlin/com/alo/sqllibscomparison/domain/boundary`
+[`/src/main/kotlin/com/alo/sqllibscomparison/domain/boundary`](/src/main/kotlin/com/alo/sqllibscomparison/domain/boundary)
 3. Add your test (there is no need to implement test, just extend this class):
-`/src/test/kotlin/com/alo/sqllibscomparison/infrastructure/persistence/TodoListFinderTest.kt`
+[`/src/test/kotlin/com/alo/sqllibscomparison/infrastructure/persistence/TodoListFinderTest.kt`](/src/test/kotlin/com/alo/sqllibscomparison/infrastructure/persistence/TodoListFinderTest.kt)
 4. Enrich this readme with your thoughts/findings
 5. Create a PR
 
@@ -140,9 +140,29 @@ If you want to add your fancy SQL lib.
 #### Exposed
 
 In Exposed we don't work with raw SQL strings. Instead, we map tables, columns, keys, relationships, etc
-... using a high-level DSL.
+... using a high-level DSL. We will need to [mimic](./src/main/kotlin/com/alo/sqllibscomparison/infrastructure/persistence/exposed/DatabaseMappings.kt) our DB in our code to use the DSL afterwards:
+```kotlin
+enum class TaskStatus { TODO, DONE }
 
-link to
+object Tasks : Table("TASK") {
+    val id = uuid("id").primaryKey()
+    val name = text("name")
+    val todoListId = (uuid("todo_list_id") references TodoLists.id)
+    val status = enumerationByName("status", 10, TaskStatus::class)
+    val position = integer("position")
+}
+
+object TodoLists : Table("TODO_LIST") {
+    val id = uuid("id").primaryKey()
+    val name = text("name")
+    val created = date("created")
+    val updated = date("updated")
+}
+```
+The API provided by Exposed is easy to use, allowing to map our DB pretty straight forward. 
+
+*Note:* Exposed is not mapping the database automatically, so we will need to do the changes manually when we change
+ the DB, if not the code will be not consistent.
 
 #### Jooq
 
