@@ -116,7 +116,48 @@ But, to be honest, JDBC directly is a bit painful:
     * AssertK
 
 ### Project Structure
+```bash
+|-- main
+|   |-- java
+|   |   `-- com
+|   |       `-- alo
+|   |           `-- sqllibscomparison
+|   |               `-- infrastructure
+|   |                   `-- jooq
+|   |                       `-- generated
+|   |                           |-- *.java // JOOQ DB MAPPINGS (AUTO GENERATED CODE)
+|   |-- kotlin
+|      `-- com
+|          `-- alo
+|              `-- sqllibscomparison
+|                  |-- domain
+|                  |   |-- TodoList.kt // DOMAIN
+|                  |   `-- boundary
+|                  |       `-- TodoListFinder.kt // CONTRACTS
+|                  `-- infrastructure
+|                      `-- persistence
+|                          |-- exposed
+|                          |   |-- DatabaseMappings.kt  // EXPOSED DB MAPPINGS
+|                          |   |-- TodoListDomainMapper.kt // TRANSLATIONS FROM EXPOSED RESULTS TO OUR DOMAIN 
+|                          |   `-- TodoListRepository.kt  // EXPOSED TODO-LIST REPO
+|                          `-- jooq
+|                              |-- TodoListDomainMapper.kt // TRANSLATIONS FROM JOOQ RESULTS TO OUR DOMAIN  
+|                              `-- TodoListRepository.kt  // JOOQ TODO-LIST REPO 
+`-- test
+    |-- kotlin
+       `-- com
+           `-- alo
+               `-- sqllibscomparison
+                   `-- infrastructure
+                       `-- persistence
+                           |-- *.kt // main test classes
+                           |-- exposed
+                           |   `-- TodoListRepositoryTest.kt // Exposed tests
+                           `-- jooq
+                               |-- CodeGen.kt // JOOQ code generator main
+                               `-- TodoListRepositoryTest.kt // JOOQ tests
 
+```
 ## Develop
 
 ### Running
@@ -232,6 +273,8 @@ With Jooq this query get translated to:
     .orderBy(TODO_LIST.CREATED.desc())
 ```
 The Jooq API is extremely powerful, with a lot of methods available to do complex queries, take a look on [their docs](https://www.jooq.org/doc/3.12/manual/sql-building/).
+
+*Note*:Since Jooq is built in java, we can use it, but we can not use all the power of kotlin on it, like named params.
 
 ### Mapping back results: Type safety
 
