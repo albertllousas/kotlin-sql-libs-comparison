@@ -195,15 +195,21 @@ There are several maven and gradle plugins to generate the code integrated with 
  
  ### Query DSL
  
+//todo
+ 
  ### Mapping back results: Type safety
  
- 
- 
+//todo
+  
  ### One to Many
+ 
+//todo
  
  ### Sub-querying
  
+//todo
+ 
  ### Conditional querying
  
- 
- mapping is simpler in exposed
+//todo
+  
