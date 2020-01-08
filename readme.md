@@ -41,6 +41,8 @@ The idea is to have different implementations of the same repository in kotlin t
 * [Exposed](https://github.com/JetBrains/Exposed)
 * Feel free to add your favourite framework here. 
 
+### Use cases
+
 To see how flexible these libs are, let's imagine some use-cases that will force the implementations to handle not
  just simple queries:
  
