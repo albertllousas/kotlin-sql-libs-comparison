@@ -98,6 +98,7 @@ But, to be honest, JDBC directly is a bit painful:
 - We don't want to deal with jdbc ResultSets, we want an easy way to map our results back to the domain, and again, if
  they could have some type of type safety it would also be great.
  
+### Approach
 **In a nutshell, our approach would like to use the frameworks as a :**
 - Lightweight layer on top of of jdbc
 - DSL, it means writing code that is similar to SQL syntax to access the DB, we love SQL but we want some help and
@@ -115,7 +116,7 @@ But, to be honest, JDBC directly is a bit painful:
     * JUnit5
     * AssertK
 
-### Project Structure
+## Project Structure
 ```bash
 |-- main
 |   |-- java
@@ -158,7 +159,7 @@ But, to be honest, JDBC directly is a bit painful:
                                `-- TodoListRepositoryTest.kt // JOOQ tests
 
 ```
-## Develop
+## Developing
 
 ### Running
 
@@ -179,7 +180,7 @@ If you want to add your fancy SQL lib.
 5. Create a PR
 
 
-## Comparison
+## Libs Comparison
 
 ### Database mapping
 
@@ -272,16 +273,70 @@ With Jooq this query get translated to:
     .on(TASK.TODO_LIST_ID.eq(TODO_LIST.ID))
     .orderBy(TODO_LIST.CREATED.desc())
 ```
-The Jooq API is extremely powerful, with a lot of methods available to do complex queries, take a look on [their docs](https://www.jooq.org/doc/3.12/manual/sql-building/).
+The Jooq API is extremely powerful, with a lot of methods available to do complex queries, take a look on [their docs](https://www.jooq.org/doc/3.12/manual/sql-building/), they are huge with infinite options.
 
 *Note*:Since Jooq is built in java, we can use it, but we can not use all the power of kotlin on it, like named params.
 
 ### Mapping back results: Type safety
 
 #### Exposed
+Queries in Exposed return `Query` objects that inherit Iterable<`ResultRow`>, we can see it as a map keyed by column.
+So, after a query we would have to map the resulting single or multiple `ResultRow` to our domain:
+
+In our case we only need to define two maps with two simple extension functions:
+From `ResultRow` to `TodoList`:
+```kotlin
+private fun ResultRow.toTodoList() = TodoList(
+        id = TodoListId(this[TodoLists.id]),
+        name = this[TodoLists.name],
+        tasks = emptyList()
+    )
+```
+And from `ResultRow` to `Task`:
+```kotlin
+private fun ResultRow.toTask() = Task(
+    name = this[Tasks.name],
+    status = when (this[Tasks.status]) {
+        TaskStatus.TODO -> Status.TODO
+        TaskStatus.DONE -> Status.DONE
+    }
+)
+```
+All the code [here](/src/main/kotlin/com/alo/sqllibscomparison/infrastructure/persistence/exposed/TodoListDomainMapper.kt).
+As we can see, it is easy to access to them, as we said, `ResultRow` is like a Map with keys as columns, and we can
+ access to the values just using the columns declared in our schema definition.
+ 
+*Important note:* Even thought it is super easy to access to the results, there is **no type-safety at all**, we just
+ access to a some kind of `Map`; so, if we make an error we would see it at runtime.
  
 #### Jooq 
-  
+As all the features in Jooq, there are multiple ways to [fetch data](https://www.jooq.org/doc/latest/manual/sql-execution/fetching/) and map them back 
+to our domain, but in this example we are using [strongly typed records](https://www.jooq.org/doc/3.12/manual/sql-execution/fetching/record-vs-tablerecord/)
+ since we are using code-generation.
+
+Again, we only need to define two extension functions:
+From [`TodoListRecord`](/src/main/java/com/alo/sqllibscomparison/infrastructure/jooq/generated/tables/records/TodoListRecord.java) to [`TodoList`](/src/main/kotlin/com/alo/sqllibscomparison/domain/TodoList.kt#L5):
+```kotlin
+private fun TodoListRecord.toTodoList() = TodoList(
+        id = TodoListId(this.id),
+        name = this.name,
+        tasks = emptyList()
+    )
+```
+And from [`TaskRecord`](/src/main/java/com/alo/sqllibscomparison/infrastructure/jooq/generated/tables/records/TaskRecord.java) to [`Task`](/src/main/kotlin/com/alo/sqllibscomparison/domain/TodoList.kt#L9):
+```kotlin
+ private fun TaskRecord.toTask() = Task(
+        name = this.name,
+        status = when (this.status) {
+            TODO -> Status.TODO
+            DONE -> Status.DONE
+        }
+    )
+```
+All the code [here](/src/main/kotlin/com/alo/sqllibscomparison/infrastructure/persistence/jooq/TodoListDomainMapper.kt).
+In terms of type-safety, we are totally covered, since Jooq generate a specific record for each table with all the
+ types defined in out schema, **we are safe at compile time :)**
+
  ### One to Many
  
 //todo
