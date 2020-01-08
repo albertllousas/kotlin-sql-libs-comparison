@@ -5,8 +5,8 @@ import com.alo.sqllibscomparison.domain.TodoListId
 import com.alo.sqllibscomparison.domain.boundary.Pagination
 import com.alo.sqllibscomparison.domain.boundary.SearchBy
 import com.alo.sqllibscomparison.domain.boundary.TodoListFinder
-import com.alo.sqllibscomparison.infrastructure.persistence.exposed.TodoListDomainMappers.toMultipleTodoLists
-import com.alo.sqllibscomparison.infrastructure.persistence.exposed.TodoListDomainMappers.toSingleTodoList
+import com.alo.sqllibscomparison.infrastructure.persistence.exposed.TodoListDomainMapper.toMultipleTodoLists
+import com.alo.sqllibscomparison.infrastructure.persistence.exposed.TodoListDomainMapper.toSingleTodoList
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.VarCharColumnType
 import org.jetbrains.exposed.sql.andWhere
@@ -27,7 +27,7 @@ class TodoListRepository : TodoListFinder {
     override fun get(id: TodoListId): TodoList? =
         TodoLists
             .leftJoin(Tasks)
-            .select { TodoLists.id eq id.value }
+            .select(where = { TodoLists.id eq id.value })
             .toList()
             .let { if (it.isNotEmpty()) toSingleTodoList(it) else null }
 
@@ -38,9 +38,8 @@ class TodoListRepository : TodoListFinder {
             .select { Tasks.status.castTo<String>(VarCharColumnType()) eq TaskStatus.TODO.name }
         return TodoLists
             .leftJoin(Tasks)
-            .select { TodoLists.id inSubQuery notCompleted }
+            .select(where = { TodoLists.id inSubQuery notCompleted })
             .orderBy(TodoLists.created, SortOrder.DESC)
-            .distinct()
             .toList()
             .let(::toMultipleTodoLists)
     }
@@ -49,7 +48,7 @@ class TodoListRepository : TodoListFinder {
         searchBy: SearchBy?,
         pagination: Pagination?
     ): List<TodoList> {
-        val resultsWithoutTasks = TodoLists
+        val todoListIds = TodoLists
             .slice(TodoLists.id)
             .selectAll()
             .let { query -> searchBy?.let { query.andWhere { TodoLists.name like "%${it.name}%" } } ?: query }
@@ -57,7 +56,7 @@ class TodoListRepository : TodoListFinder {
             .orderBy(TodoLists.created, SortOrder.DESC)
         return TodoLists
             .leftJoin(Tasks)
-            .select { TodoLists.id inSubQuery resultsWithoutTasks }
+            .select(where = { TodoLists.id inSubQuery todoListIds })
             .orderBy(TodoLists.created, SortOrder.DESC)
             .toList()
             .let(::toMultipleTodoLists)

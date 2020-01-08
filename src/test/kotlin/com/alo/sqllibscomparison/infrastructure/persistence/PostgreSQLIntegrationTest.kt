@@ -7,8 +7,6 @@ import org.testcontainers.containers.PostgreSQLContainer
 
 abstract class PostgreSQLIntegrationTest {
 
-    class KtPostgreSQLContainer() : PostgreSQLContainer<KtPostgreSQLContainer>("postgres:11.1")
-
     protected val postgresqlContainer = KtPostgreSQLContainer()
         .withUsername("user")
         .withPassword("password")

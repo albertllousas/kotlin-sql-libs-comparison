@@ -7,13 +7,13 @@ import com.alo.sqllibscomparison.domain.TodoListId
 import org.jetbrains.exposed.sql.ResultRow
 import java.util.UUID
 
-object TodoListDomainMappers {
-    private val groupByTodoList: (ResultRow) -> UUID = { row -> row[TodoLists.id] }
+object TodoListDomainMapper {
+    private val groupByTodoListId: (ResultRow) -> UUID = { row -> row[TodoLists.id] }
 
-    fun toMultipleTodoLists(rows: List<ResultRow>) =
-        rows.groupBy(groupByTodoList)
-            .mapValues { (_, groupedRows) -> toSingleTodoList(groupedRows) }
+    fun toMultipleTodoLists(rows: List<ResultRow>): List<TodoList> =
+        rows.groupBy(groupByTodoListId)
             .values
+            .map { groupedRows -> toSingleTodoList(groupedRows) }
             .toList()
 
     fun toSingleTodoList(rows: List<ResultRow>): TodoList {

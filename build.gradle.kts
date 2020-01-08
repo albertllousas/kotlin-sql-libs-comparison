@@ -17,7 +17,7 @@ dependencies {
     implementation("org.jooq:jooq:3.12.3")
     implementation("org.jooq:jooq-codegen:3.12.3")
     implementation("org.jetbrains.exposed:exposed:0.17.7")
-    implementation("org.slf4j:slf4j-simple:1.7.28")
+    implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.13.0")
     implementation("org.postgresql:postgresql:42.2.9")
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")
@@ -32,6 +32,11 @@ tasks.test {
     testLogging {
         events("passed", "skipped", "failed")
     }
+}
+
+task<JavaExec>("JooqCodeGen") {
+    main = "com.alo.sqllibscomparison.infrastructure.persistence.jooq.CodeGenKt"
+    classpath = sourceSets["test"].runtimeClasspath
 }
 
 val compileKotlin: KotlinCompile by tasks

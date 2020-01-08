@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO">
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{ABSOLUTE} %5p [%-50c{4}] - %m%n"/>
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <!-- SQL execution logging is logged to the LoggerListener logger at DEBUG level -->
+        <Logger name="org.jooq.tools.LoggerListener" level="debug">
+            <AppenderRef ref="Console"/>
+        </Logger>
+
+        <!-- Other jOOQ related debug log output -->
+        <Logger name="org.jooq" level="debug">
+            <AppenderRef ref="Console"/>
+        </Logger>
+
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+        </Root>
+    </Loggers>
+</Configuration>

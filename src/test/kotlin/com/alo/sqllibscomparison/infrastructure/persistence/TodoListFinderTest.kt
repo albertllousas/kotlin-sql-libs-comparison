@@ -17,7 +17,6 @@ abstract class TodoListFinderTest : PostgreSQLIntegrationTest(), WithTestTransac
 
     abstract val todoListFinder: TodoListFinder
 
-
     @Test
     fun `should get a single to-do list`() = withTestTransaction {
         assertThat(todoListFinder.get(TodoListId(value = UUID.fromString("4db3b6ae-3257-46b6-b3c3-d8b91239632a"))))

@@ -41,13 +41,13 @@ The idea is to have different implementations of the same repository in kotlin t
 * [Exposed](https://github.com/JetBrains/Exposed)
 * Feel free to add your favourite framework here. 
 
-To see how flexible these libs are, let's imagine some use-cases that will force the implementations to handle simple
- and complex queries:
+To see how flexible these libs are, let's imagine some use-cases that will force the implementations to handle not
+ just simple queries:
  
-* Get a single to-do list or list all: Just simple queries
+* Since we will always access to an aggregate root, all queries will imply **one-to-many** joins; it means dealing with
+ multiple rows and grouping, not just simple mappings from a row to a dto. 
 * Find all not completed todo lists : Sub-querying
 * Search and paginate todo lists: Conditional and dynamic querying
-* Since we will always access to an aggregate root, all queries will imply one-to-many joins: 1+n query problem
 
 To make it easy and consistent, implementations should implement [interfaces](./src/main/kotlin/com/alo/sqllibscomparison/domain/boundary/):
 ```kotlin
@@ -62,7 +62,7 @@ data class SearchBy(val name: String)
 data class Pagination(val start:Int = 0, val limit:Int=20)
 ```
  
-## Libraries scope and ORM anti-pattern
+## DSL vs ORM
 
 Almost all SQL libraries offer an ORM version. We are not going to use the any of the libraries as an [ORM](https://en.wikipedia.org/wiki/Object-relational_mapping), **We want to use and love SQL**. 
 
@@ -90,15 +90,16 @@ So, my question would be, why you want to use an ORM with all the risks listed a
 
 But, to be honest, JDBC directly is a bit painful:
 - We don't want to write SQL directly:
-    - We don't want to write SQL as strings, but we want the control of what we do.
+    - We don't want to write SQL as strings.
     - Avoid dynamic queries generation with plain SQL   
     - Update strings is not scalable and maintainable at all.
 - We don't want to deal with jdbc ResultSets, we want an easy way to map our results back to the domain, and again, if
  they could have some type of type safety it would also be great.
  
-In a nutshell, our approach  would be to use the frameworks as:
+In a nutshell, our approach  would be to use the frameworks as a :
 - Lightweight layer on top of of jdbc
-- SQL query builders, we are just lazy, we love SQL but we need some help and type safety at compile time :) 
+- DSL, it means writing code that is similar to SQL syntax to access the DB, we love SQL but we want some help and
+ type safety at compile time :) 
 - Domain mapping facilitators
 - Database first, we want to know what SQL we are generating!
 
@@ -111,6 +112,8 @@ In a nutshell, our approach  would be to use the frameworks as:
     * TestContainers
     * JUnit5
     * AssertK
+
+### Project Structure
 
 ## Develop
 
@@ -140,7 +143,8 @@ If you want to add your fancy SQL lib.
 #### Exposed
 
 In Exposed we don't work with raw SQL strings. Instead, we map tables, columns, keys, relationships, etc
-... using a high-level DSL. We will need to [mimic](./src/main/kotlin/com/alo/sqllibscomparison/infrastructure/persistence/exposed/DatabaseMappings.kt) our DB in our code to use the DSL afterwards:
+... using a high-level DSL. The DSL (Domain Specific Language) API of Exposed, is similar to actual SQL statements with type safety that Kotlin offers. 
+We will need to [mimic](./src/main/kotlin/com/alo/sqllibscomparison/infrastructure/persistence/exposed/DatabaseMappings.kt) our DB in our code to use the DSL afterwards:
 ```kotlin
 enum class TaskStatus { TODO, DONE }
 
@@ -159,7 +163,8 @@ object TodoLists : Table("TODO_LIST") {
     val updated = date("updated")
 }
 ```
-The API provided by Exposed is easy to use, allowing to map our DB pretty straight forward. 
+The API provided by Exposed is easy to use, allowing to map our DB pretty straight forward, just mapping tables
+ directly. 
 
 *Note:* Exposed is not mapping the database automatically, so we will need to do the changes manually when we change
  the DB, if not the code will be not consistent.
@@ -169,6 +174,34 @@ The API provided by Exposed is easy to use, allowing to map our DB pretty straig
 There are many ways to work with jooq, but in our case we use the code generation. jOOQ's code generator takes your
  database schema and reverse-engineers it into a set of Java classes modelling tables, records, sequences, POJOs
  , DAOs, stored procedures, user-defined types and many more.
+
+There are several maven and gradle plugins to generate the code integrated with the project lifecycle, but in our
+ case we will use programmatic generator configuration, just do in it by ourselves.
+ [CodeGen](./src/main/kotlin/com/alo/sqllibscomparison/infrastructure/persistence/jooq/CodeGen.kt)
  
- java 
- link to
+ To regenerate all the mappings (we have to add extra code in gradle to run it):
+ ```shell script
+./gradlew JooqCodeGen
+```
+
+ The generated code is in java, not kotlin, and as you can see it reflects exactly all the database schema, it maps
+  everything from tables to records, even indexes:
+[Java generated code](./src/main/java/com/alo/sqllibscomparison/infrastructure/jooq/generated) 
+
+*Note*: Now all the mappings are auto-generated by Jooq, but they are generated in java and we have to add extra code in
+ our build lifecycle.
+ 
+ ### Query DSL
+ 
+ ### Mapping back results: Type safety
+ 
+ 
+ 
+ ### One to Many
+ 
+ ### Sub-querying
+ 
+ ### Conditional querying
+ 
+ 
+ mapping is simpler in exposed
