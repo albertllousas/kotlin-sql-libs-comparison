@@ -315,6 +315,7 @@ to our domain, but in this example we are using [strongly typed records](https:/
  since we are using code-generation.
 
 Again, we only need to define two extension functions:
+
 From [`TodoListRecord`](/src/main/java/com/alo/sqllibscomparison/infrastructure/jooq/generated/tables/records/TodoListRecord.java) to [`TodoList`](/src/main/kotlin/com/alo/sqllibscomparison/domain/TodoList.kt#L5):
 ```kotlin
 private fun TodoListRecord.toTodoList() = TodoList(
@@ -334,7 +335,11 @@ And from [`TaskRecord`](/src/main/java/com/alo/sqllibscomparison/infrastructure/
     )
 ```
 All the code [here](/src/main/kotlin/com/alo/sqllibscomparison/infrastructure/persistence/jooq/TodoListDomainMapper.kt).
-In terms of type-safety, we are totally covered, since Jooq generate a specific record for each table with all the
+
+Notice that we are not dealing with abstracted results, we have specific record definitions both for TodoListRecord
+ and TaskRecord.
+
+In terms of type-safety, we are totally covered, since Jooq generate specifics record for each table with all the
  types defined in out schema, **we are safe at compile time :)**
 
  ### One to Many
