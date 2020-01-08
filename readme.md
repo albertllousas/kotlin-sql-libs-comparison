@@ -339,7 +339,7 @@ All the code [here](/src/main/kotlin/com/alo/sqllibscomparison/infrastructure/pe
 Notice that we are not dealing with abstracted results, we have specific record definitions both for TodoListRecord
  and TaskRecord.
 
-In terms of type-safety, we are totally covered, since Jooq generate specifics record for each table with all the
+In terms of type-safety, we are totally covered, since Jooq generate specific record for each table with all the
  types defined in out schema, **we are safe at compile time :)**
 
  ### One to Many
