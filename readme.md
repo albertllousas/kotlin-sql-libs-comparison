@@ -183,7 +183,8 @@ If you want to add your fancy SQL lib.
 ## Libs Comparison
 
 ### Database mapping
-
+Almost libraries that access to a database imply mapping the schema somehow, some use annotations, another simple dtos
+and other complex apis. Let's see how the frameworks in comparison handle that. 
 #### Exposed
 
 In Exposed we don't work with raw SQL strings. Instead, we map tables, columns, keys, relationships, etc
@@ -236,7 +237,12 @@ There are several maven and gradle plugins to generate the code integrated with 
  our build lifecycle.
  
 ### DSL
+In order to interact with our data stores we will need in one way or another to call the libs APIs to access or modify
+ our data, it means that under the hood, all the frameworks will translate this calls to real SQL.
+Almost all of them provide [DSL](https://martinfowler.com/dsl.html)'s to facilitate this translation.
 
+SQL have an extended syntax for accessing and manipulating databases. In the next section we are going to center in
+ just one example to see how natural it feels and how close it is to the real SQL.
 #### Exposed
 The DSL (Domain Specific Language) API of Exposed, is similar to actual SQL statements with type safety that Kotlin offers.
 For example, listing all todo-list, in plain sql:
@@ -278,13 +284,22 @@ The Jooq API is extremely powerful, with a lot of methods available to do comple
 *Note*:Since Jooq is built in java, we can use it, but we can not use all the power of kotlin on it, like named params.
 
 ### Mapping back results: Type safety
+The other side of querying is parse the results, and to do that we will need always to map them back to your domain or
+ to a temporal DTO layer.
+ 
+Usually frameworks provide abstractions of [ResultSets](https://docs.oracle.com/javase/8/docs/api/java/sql/ResultSet.html) to iterate over them, mapper apis to map directly to DTOs
+ or even sometimes integration with third parties to do that.
+ 
+In our case we are going to check how type-safe they are in compile time.
 
 #### Exposed
-Queries in Exposed return `Query` objects that inherit Iterable<`ResultRow`>, we can see it as a map keyed by column.
+Queries in Exposed return `Query` objects that inherit Iterable<`ResultRow`>, we can see it as a map keyed by column
+ or a projection of a real database row.
 So, after a query we would have to map the resulting single or multiple `ResultRow` to our domain:
 
 In our case we only need to define two maps with two simple extension functions:
-From `ResultRow` to `TodoList`:
+
+1. from `ResultRow` to `TodoList`:
 ```kotlin
 private fun ResultRow.toTodoList() = TodoList(
         id = TodoListId(this[TodoLists.id]),
@@ -292,7 +307,7 @@ private fun ResultRow.toTodoList() = TodoList(
         tasks = emptyList()
     )
 ```
-And from `ResultRow` to `Task`:
+2. from `ResultRow` to `Task`:
 ```kotlin
 private fun ResultRow.toTask() = Task(
     name = this[Tasks.name],
@@ -312,11 +327,11 @@ As we can see, it is easy to access to them, as we said, `ResultRow` is like a M
 #### Jooq 
 As all the features in Jooq, there are multiple ways to [fetch data](https://www.jooq.org/doc/latest/manual/sql-execution/fetching/) and map them back 
 to our domain, but in this example we are using [strongly typed records](https://www.jooq.org/doc/3.12/manual/sql-execution/fetching/record-vs-tablerecord/)
- since we are using code-generation.
+ since we are using code-generation and not as an ORM.
 
 Again, we only need to define two extension functions:
 
-From [`TodoListRecord`](/src/main/java/com/alo/sqllibscomparison/infrastructure/jooq/generated/tables/records/TodoListRecord.java) to [`TodoList`](/src/main/kotlin/com/alo/sqllibscomparison/domain/TodoList.kt#L5):
+1. from [`TodoListRecord`](/src/main/java/com/alo/sqllibscomparison/infrastructure/jooq/generated/tables/records/TodoListRecord.java) to [`TodoList`](/src/main/kotlin/com/alo/sqllibscomparison/domain/TodoList.kt#L5):
 ```kotlin
 private fun TodoListRecord.toTodoList() = TodoList(
         id = TodoListId(this.id),
@@ -324,7 +339,8 @@ private fun TodoListRecord.toTodoList() = TodoList(
         tasks = emptyList()
     )
 ```
-And from [`TaskRecord`](/src/main/java/com/alo/sqllibscomparison/infrastructure/jooq/generated/tables/records/TaskRecord.java) to [`Task`](/src/main/kotlin/com/alo/sqllibscomparison/domain/TodoList.kt#L9):
+2. from [`TaskRecord`](/src/main/java/com/alo/sqllibscomparison/infrastructure/jooq/generated/tables/records/TaskRecord
+.java) to [`Task`](/src/main/kotlin/com/alo/sqllibscomparison/domain/TodoList.kt#L9):
 ```kotlin
  private fun TaskRecord.toTask() = Task(
         name = this.name,
@@ -342,9 +358,15 @@ Notice that we are not dealing with abstracted results, we have specific record 
 In terms of type-safety, we are totally covered, since Jooq generate specific record for each table with all the
  types defined in out schema, **we are safe at compile time :)**
 
- ### One to Many
- 
-//todo
+#### Querying
+If you look at different websites, blogs, docs, all samples are using simple queries on simple tables, but in a real
+ world, apps usually are more complex, it means that we would need to deal with more complex queries almost all the
+  time, here I would like to compare how these different libs tackle these problems.
+### One to Many relationships
+Querying and mapping back results from one table is simple, even many-to-one relationships
+#### Exposed
+
+### Jooq
  
  ### Sub-querying
  
