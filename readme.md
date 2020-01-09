@@ -284,13 +284,13 @@ The Jooq API is extremely powerful, with a lot of methods available to do comple
 *Note*:Since Jooq is built in java, we can use it, but we can not use all the power of kotlin on it, like named params.
 
 ### Mapping back results: Type safety
-The other side of querying is parse the results, and to do that we will need always to map them back to your domain or
+The other side of querying is parsing the results, and to do that we will need always to map them back to your domain or
  to a temporal DTO layer.
  
-Usually frameworks provide abstractions of [ResultSets](https://docs.oracle.com/javase/8/docs/api/java/sql/ResultSet.html) to iterate over them, mapper apis to map directly to DTOs
- or even sometimes integration with third parties to do that.
+Usually frameworks provide abstractions of [ResultSets](https://docs.oracle.com/javase/8/docs/api/java/sql/ResultSet.html) 
+to iterate over them, mapper apis to map directly to DTOs or even sometimes integration with third parties to do that.
  
-In our case we are going to check how type-safe they are in compile time.
+In our case we are going to check how type-safe they are in terms of compile time.
 
 #### Exposed
 Queries in Exposed return `Query` objects that inherit Iterable<`ResultRow`>, we can see it as a map keyed by column
