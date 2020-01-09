@@ -17,6 +17,10 @@
             <AppenderRef ref="Console"/>
         </Logger>
 
+        <logger name="Exposed" level="debug">
+            <appender-ref ref="Console" />
+        </logger>
+
         <Root level="info">
             <AppenderRef ref="Console"/>
         </Root>

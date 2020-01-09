@@ -9,8 +9,4 @@ class TodoListRepositoryTest: TodoListFinderTest() {
     override val todoListFinder by lazy {
         TodoListRepository( DSL.using(postgresqlContainer.jdbcUrl, "user", "password"))
     }
-
-    override fun withTestTransaction(testBlock: () -> Unit) {
-        testBlock()
-    }
 }

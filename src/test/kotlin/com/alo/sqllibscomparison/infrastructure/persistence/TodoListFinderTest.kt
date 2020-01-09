@@ -13,24 +13,24 @@ import com.alo.sqllibscomparison.infrastructure.persistence.fixtures.TodoLists
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
-abstract class TodoListFinderTest : PostgreSQLIntegrationTest(), WithTestTransaction {
+abstract class TodoListFinderTest : PostgreSQLIntegrationTest() {
 
     abstract val todoListFinder: TodoListFinder
 
     @Test
-    fun `should get a single to-do list`() = withTestTransaction {
+    fun `should get a single to-do list`()  {
         assertThat(todoListFinder.get(TodoListId(value = UUID.fromString("4db3b6ae-3257-46b6-b3c3-d8b91239632a"))))
             .isEqualTo(TodoLists.weekendTodoList)
     }
 
     @Test
-    fun `should return a nullable getting a non-existent to-do list`() = withTestTransaction {
+    fun `should return a nullable getting a non-existent to-do list`()  {
         assertThat(todoListFinder.get(TodoListId(value = UUID.fromString("f8a27cde-4a93-4247-b0e5-77f622c37a07"))))
             .isNull()
     }
 
     @Test
-    fun `should list all to-do lists`() = withTestTransaction {
+    fun `should list all to-do lists`()  {
         assertThat(todoListFinder.listAll())
             .containsExactly(
                     TodoLists.weekendTodoList,
@@ -42,7 +42,7 @@ abstract class TodoListFinderTest : PostgreSQLIntegrationTest(), WithTestTransac
     }
 
     @Test
-    fun `should paginate when searching to-do lists`() = withTestTransaction {
+    fun `should paginate when searching to-do lists`()  {
         assertThat(todoListFinder.search(pagination = Pagination(1,3)))
             .containsExactly(
                     TodoLists.pizzaFridayTodoList,
@@ -52,7 +52,7 @@ abstract class TodoListFinderTest : PostgreSQLIntegrationTest(), WithTestTransac
     }
 
     @Test
-    fun `should search by name to-do lists`() = withTestTransaction {
+    fun `should search by name to-do lists`()  {
         assertThat(todoListFinder.search(searchBy = SearchBy(name = "list")))
             .containsExactly(
                 TodoLists.supermanTodoList,
@@ -61,7 +61,7 @@ abstract class TodoListFinderTest : PostgreSQLIntegrationTest(), WithTestTransac
     }
 
     @Test
-    fun `should find todo lists with pending tasks to be finished`() = withTestTransaction {
+    fun `should find todo lists with pending tasks to be finished`()  {
         assertThat(todoListFinder.findNotCompleted())
             .containsExactly(
                 TodoLists.pizzaFridayTodoList,

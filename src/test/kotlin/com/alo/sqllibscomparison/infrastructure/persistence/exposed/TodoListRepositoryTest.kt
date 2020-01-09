@@ -20,11 +20,4 @@ class TodoListRepositoryTest: TodoListFinderTest() {
         )
     }
 
-    override fun withTestTransaction(testBlock: () -> Unit) {
-
-        transaction {
-            addLogger(StdOutSqlLogger)
-            testBlock() }
-    }
-
 }
