@@ -421,8 +421,8 @@ An this is how we group and map the rows to the domain:
         return firstRow.toTodoList().copy(tasks = tasks)
     }
 
-    private fun ResultRow.toTodoList() = ... // check previous section
-    private fun ResultRow.toTask() = ... // check previous section
+    private fun ResultRow.toTodoList() = ... // check previous exposed section
+    private fun ResultRow.toTask() = ... // check previous exposed section
 ```
 [Source](/src/main/kotlin/com/alo/sqllibscomparison/infrastructure/persistence/exposed/TodoListDomainMapper.kt)  
 
@@ -433,6 +433,43 @@ With exposed we have to manually group rows by todo-list before map a single row
 Even is manual work, since Exposed is simple and easy to use, if you are familiar with SQL it shouldn't be a big deal.
 
 ##### Jooq
+As we explained in the previous section, JOOQ provide multiple ways to fetch data, and in our example we are using 
+we are using [strongly typed records](https://www.jooq.org/doc/3.12/manual/sql-execution/fetching/record-vs-tablerecord/).
+Having this in mind, JOOQ provide in their built API methods to handle the grouping automatically for typed DB Records.
+
+One of them is [`fetchGroups`](https://www.jooq.org/javadoc/latest/org.jooq/org/jooq/ResultQuery.html#fetchGroups(org.jooq.Table)), this method allow us to group by table.
+
+```kotlin
+override fun listAll(): List<TodoList> =
+        jooq.select()
+            .from(TODO_LIST)
+            .leftJoin(TASK)
+            .on(TASK.TODO_LIST_ID.eq(TODO_LIST.ID))
+            .orderBy(TODO_LIST.CREATED.desc())
+            .fetchGroups(TODO_LIST) // The result type is -> Map<TodoListRecord, Result<Record>>
+            .mapValues { it.value.into(TASK).toList() } // The result type is -> Map<TodoListRecord, Result<TaskRecord>>
+            .map { (todoListRecord, taskRecords) -> TodoListDomainMapper.toTodoList(todoListRecord, taskRecords) }
+```
+[Source](/src/main/kotlin/com/alo/sqllibscomparison/infrastructure/persistence/jooq/TodoListRepository.kt#18)  
+
+Now we only need to convert a tuple of [TodolistRecord](/src/main/java/com/alo/sqllibscomparison/infrastructure/jooq/generated/tables/records/TodoListRecord.java) and its corresponding [TaskRecord](/src/main/java/com/alo/sqllibscomparison/infrastructure/jooq/generated/tables/records/TaskRecord.java) to [TodoList](/src/main/kotlin/com/alo/sqllibscomparison/domain/TodoList.kt#) domain.
+
+```kotlin
+ fun toTodoList(
+        todoListRecord: TodoListRecord,
+        taskRecords: List<TaskRecord>
+    ): TodoList = todoListRecord.toTodoList().copy(tasks = taskRecords.sortedBy { it.position }.map { it.toTask() })
+
+    private fun TodoListRecord.toTodoList() = ...// check previous jooq section
+
+    private fun TaskRecord.toTask() = ...// check previous jooq section
+```
+[Source](/src/main/kotlin/com/alo/sqllibscomparison/infrastructure/persistence/jooq/TodoListDomainMapper.kt)  
+
+Given the typesafe nature and the extense API of JOOQ, it is easy to tackle the one-to-many problem in many ways, the
+ one that we saw is just one of them. 
+ 
+If we wanted to automate this we could do it with a [record mapper providers](https://www.jooq.org/doc/latest/manual/sql-execution/fetching/pojos-with-recordmapper-provider/).
  
 #### Sub-querying
  
