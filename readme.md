@@ -317,7 +317,7 @@ private fun ResultRow.toTask() = Task(
     }
 )
 ```
-All the code [here](/src/main/kotlin/com/alo/sqllibscomparison/infrastructure/persistence/exposed/TodoListDomainMapper.kt).
+[source](/src/main/kotlin/com/alo/sqllibscomparison/infrastructure/persistence/exposed/TodoListDomainMapper.kt).
 As we can see, it is easy to access to them, as we said, `ResultRow` is like a Map with keys as columns, and we can
  access to the values just using the columns declared in our schema definition.
  
@@ -349,7 +349,7 @@ private fun TodoListRecord.toTodoList() = TodoList(
         }
     )
 ```
-All the code [here](/src/main/kotlin/com/alo/sqllibscomparison/infrastructure/persistence/jooq/TodoListDomainMapper.kt).
+[source](/src/main/kotlin/com/alo/sqllibscomparison/infrastructure/persistence/jooq/TodoListDomainMapper.kt).
 
 Notice that we are not dealing with abstracted results, we have specific record definitions both for TodoListRecord
  and TaskRecord.
@@ -389,6 +389,7 @@ As you can see, mapping the relationship of Todolist with multiple Tasks is not 
 ##### Exposed
 Since `Exposed` is returning back always abstractions of rows, we will have to group them manually before mapping
  them back to our domain.
+ 
 This is the one to many query:
 ```kotlin
 override fun listAll(): List<TodoList> = transaction {
@@ -401,6 +402,7 @@ override fun listAll(): List<TodoList> = transaction {
     }
 ```
 [Source](/src/main/kotlin/com/alo/sqllibscomparison/infrastructure/persistence/exposed/TodoListRepository.kt#20)  
+
 An this is how we group and map the rows to the domain:
 ```kotlin
     private val groupByTodoListId: (ResultRow) -> UUID = { row -> row[TodoLists.id] }
@@ -418,21 +420,11 @@ An this is how we group and map the rows to the domain:
         return firstRow.toTodoList().copy(tasks = tasks)
     }
 
-    private fun ResultRow.toTodoList() = TodoList(
-        id = TodoListId(this[TodoLists.id]),
-        name = this[TodoLists.name],
-        tasks = emptyList()
-    )
-
-    private fun ResultRow.toTask() = Task(
-        name = this[Tasks.name],
-        status = when (this[Tasks.status]) {
-            TaskStatus.TODO -> Status.TODO
-            TaskStatus.DONE -> Status.DONE
-        }
-    )
+    private fun ResultRow.toTodoList() = ... // check previous section
+    private fun ResultRow.toTask() = ... // check previous section
 ```
 [Source](/src/main/kotlin/com/alo/sqllibscomparison/infrastructure/persistence/exposed/TodoListDomainMapper.kt)  
+
 
 With exposed we have to manually group rows by todo-list before map a single row to the domain, this lib is not
  providing any special method or third party integration to do so.
