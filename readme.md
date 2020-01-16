@@ -317,7 +317,8 @@ private fun ResultRow.toTask() = Task(
     }
 )
 ```
-[source](/src/main/kotlin/com/alo/sqllibscomparison/infrastructure/persistence/exposed/TodoListDomainMapper.kt).
+[Source](/src/main/kotlin/com/alo/sqllibscomparison/infrastructure/persistence/exposed/TodoListDomainMapper.kt).
+
 As we can see, it is easy to access to them, as we said, `ResultRow` is like a Map with keys as columns, and we can
  access to the values just using the columns declared in our schema definition.
  
@@ -349,7 +350,7 @@ private fun TodoListRecord.toTodoList() = TodoList(
         }
     )
 ```
-[source](/src/main/kotlin/com/alo/sqllibscomparison/infrastructure/persistence/jooq/TodoListDomainMapper.kt).
+[Source](/src/main/kotlin/com/alo/sqllibscomparison/infrastructure/persistence/jooq/TodoListDomainMapper.kt).
 
 Notice that we are not dealing with abstracted results, we have specific record definitions both for TodoListRecord
  and TaskRecord.
