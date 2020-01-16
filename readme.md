@@ -339,8 +339,7 @@ private fun TodoListRecord.toTodoList() = TodoList(
         tasks = emptyList()
     )
 ```
-2. from [`TaskRecord`](/src/main/java/com/alo/sqllibscomparison/infrastructure/jooq/generated/tables/records/TaskRecord
-.java) to [`Task`](/src/main/kotlin/com/alo/sqllibscomparison/domain/TodoList.kt#L9):
+2. from [`TaskRecord`](/src/main/java/com/alo/sqllibscomparison/infrastructure/jooq/generated/tables/records/TaskRecord.java) to [`Task`](/src/main/kotlin/com/alo/sqllibscomparison/domain/TodoList.kt#L9):
 ```kotlin
  private fun TaskRecord.toTask() = Task(
         name = this.name,
@@ -358,21 +357,49 @@ Notice that we are not dealing with abstracted results, we have specific record 
 In terms of type-safety, we are totally covered, since Jooq generate specific record for each table with all the
  types defined in out schema, **we are safe at compile time :)**
 
-#### Querying
+### Querying
 If you look at different websites, blogs, docs, all samples are using simple queries on simple tables, but in a real
- world, apps usually are more complex, it means that we would need to deal with more complex queries almost all the
-  time, here I would like to compare how these different libs tackle these problems.
-### One to Many relationships
-Querying and mapping back results from one table is simple, even many-to-one relationships
-#### Exposed
+ world, apps usually are more complex, it means that we would need to deal with more complex queries almost all the time, 
+ here I would like to compare how these different libs tackle these problems.
+  
+#### One to Many relationships
+Querying and mapping back results from one table is simple, even many-to-one relationships are easy to map because
+ maps are row to dto/class; but one-to-many relationships are always tricky to do almost in all sql libs because
+ it is a the typical case where two worlds sql and oop differ.
 
-### Jooq
+Let's see an example in action to understand the problem, given this query on our schema:
+```sql
+select * from todo_list left join task on task.todo_list_id = todo_list.id order by todo_list.created desc
+```
+Then, this is the resultset that we get in return (we have omitted some columns of the real result)
+```diff
++--------+-------------+--------+-------------+--------------+--------+------+ 
+|id      |name         |id      |todo_list_id |name          |position|status| 
++--------+-------------+--------+-------------+--------------+--------+------+ 
+-|4db3b6ae|Weekend      |78ba8aed|4db3b6ae-3257|Get drunk     |       0|DONE  | 
++|202dba03|Pizza friday |f6182487|202dba03-0505|Pineapple     |       0|TODO  | 
++|202dba03|Pizza friday |f7ea6136|202dba03-0505|Mozzarella    |       2|TODO  | 
++|202dba03|Pizza friday |2d1fd77b|202dba03-0505|Tomato        |       1|TODO  | 
+!|6ff7334f|Superman list|ce6b5b23|6ff7334f-b270|Save the world|       0|TODO  | 
++--------+-------------+--------+-------------+--------------+--------+------+ 
+``` 
+As you can see, mapping the relationship of Todolist with multiple Tasks is not easy, tt means that we will have to
+ group rows before map them or use special mappers/result-handlers to do so.
  
- ### Sub-querying
+##### Exposed
+
+##### Jooq
  
-//todo
+#### Sub-querying
  
- ### Dynamic querying
+##### Exposed
+
+##### Jooq
  
+#### Dynamic querying
+
+##### Exposed
+
+##### Jooq
  https://blog.jooq.org/tag/query-dsl/
   
