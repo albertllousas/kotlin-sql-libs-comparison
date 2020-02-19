@@ -366,7 +366,7 @@ If you look at different websites, blogs, docs, all samples are using simple que
 #### One to Many relationships
 Querying and mapping back results from one table is simple, even many-to-one relationships are easy to map because
  maps are row to dto/class; but one-to-many relationships are always tricky to do almost in all sql libs because
- it is a the typical case where two worlds sql and oop differ.
+ it's a the typical case where two worlds sql and oop differ.
 
 Let's see an example in action to understand the problem, given this query on our schema:
 ```sql
@@ -374,15 +374,15 @@ select * from todo_list left join task on task.todo_list_id = todo_list.id order
 ```
 Then, this is the resultset that we get in return (we have omitted some columns of the real result)
 ```diff
-+--------+-------------+--------+-------------+--------------+--------+------+ 
-|id      |name         |id      |todo_list_id |name          |position|status| 
-+--------+-------------+--------+-------------+--------------+--------+------+ 
+ +--------+-------------+--------+-------------+--------------+--------+------+ 
+ |id      |name         |id      |todo_list_id |name          |position|status| 
+ +--------+-------------+--------+-------------+--------------+--------+------+ 
 -|4db3b6ae|Weekend      |78ba8aed|4db3b6ae-3257|Get drunk     |       0|DONE  | 
 +|202dba03|Pizza friday |f6182487|202dba03-0505|Pineapple     |       0|TODO  | 
 +|202dba03|Pizza friday |f7ea6136|202dba03-0505|Mozzarella    |       2|TODO  | 
 +|202dba03|Pizza friday |2d1fd77b|202dba03-0505|Tomato        |       1|TODO  | 
 !|6ff7334f|Superman list|ce6b5b23|6ff7334f-b270|Save the world|       0|TODO  | 
-+--------+-------------+--------+-------------+--------------+--------+------+ 
+ +--------+-------------+--------+-------------+--------------+--------+------+ 
 ``` 
 As you can see, mapping the relationship of Todolist with multiple Tasks is not easy, tt means that we will have to
  group rows before map them or use special mappers/result-handlers to do so.
@@ -434,8 +434,8 @@ Even is manual work, since Exposed is simple and easy to use, if you are familia
 
 ##### Jooq
 As we explained in the previous section, JOOQ provide multiple ways to fetch data, and in our example we are using 
-we are using [strongly typed records](https://www.jooq.org/doc/3.12/manual/sql-execution/fetching/record-vs-tablerecord/).
-Having this in mind, JOOQ provide in their built API methods to handle the grouping automatically for typed DB Records.
+ [strongly typed records](https://www.jooq.org/doc/3.12/manual/sql-execution/fetching/record-vs-tablerecord/).
+Having this in mind, JOOQ provide plenty of API methods to handle the grouping automatically for typed DB Records.
 
 One of them is [`fetchGroups`](https://www.jooq.org/javadoc/latest/org.jooq/org/jooq/ResultQuery.html#fetchGroups(org.jooq.Table)), this method allow us to group by table.
 
@@ -447,7 +447,7 @@ override fun listAll(): List<TodoList> =
             .on(TASK.TODO_LIST_ID.eq(TODO_LIST.ID))
             .orderBy(TODO_LIST.CREATED.desc())
             .fetchGroups(TODO_LIST) // The result type is -> Map<TodoListRecord, Result<Record>>
-            .mapValues { it.value.into(TASK).toList() } // The result type is -> Map<TodoListRecord, Result<TaskRecord>>
+            .mapValues { it.value.into(TASK).toList() } // The result type is -> Map<TodoListRecord, List<TaskRecord>>
             .map { (todoListRecord, taskRecords) -> TodoListDomainMapper.toTodoList(todoListRecord, taskRecords) }
 ```
 [Source](/src/main/kotlin/com/alo/sqllibscomparison/infrastructure/persistence/jooq/TodoListRepository.kt#18)  
@@ -472,6 +472,30 @@ Given the typesafe nature and the extense API of JOOQ, it is easy to tackle the 
 If we wanted to automate this we could do it with a [record mapper providers](https://www.jooq.org/doc/latest/manual/sql-execution/fetching/pojos-with-recordmapper-provider/).
  
 #### Sub-querying
+A [subquery](https://www.w3resource.com/sql/subqueries/understanding-sql-subqueries.php) is a SQL query nested inside
+ a larger query, and that's another complex thing to tackle with any ORM, you will have to know the framework and use
+  special functions or plain sql to achieve this.
+  
+Coming back to our case, one of the problems that we have to solve is to list all the list not-completed, the ones
+ with task still pending to-do.
+ 
+Maybe it seems simple, but with one-to-many relationship in the middle it gets complicated, but hopefully sub-querying
+ comes to the rescue:
+- Create a simple join query that gives us all the todoListId's that contain a task in `TODO` status
+- Query all todoList with all their tasks (`TODO` and `DONE`) with the Ids from the previous query
+- Mix all together with a subquery.
+
+Ta-da! :
+```sql
+select * from todo_list
+left join task on task.todo_list_id = todo_list.id
+where task.todo_list_id in (
+    select distinct on (todo_list.id) todo_list.id 
+    from todo_list left  join task on task.todo_list_id = todo_list.id 
+    where task.status = 'TODO'
+) 
+order by "public"."todo_list"."created" desc
+``` 
  
 ##### Exposed
 
