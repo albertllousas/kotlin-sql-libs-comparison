@@ -365,8 +365,8 @@ If you look at different websites, blogs, docs, all samples are using simple que
   
 #### One to Many relationships
 Querying and mapping back results from one table is simple, even many-to-one relationships are easy to map because
- maps are row to dto/class; but one-to-many relationships are always tricky to do almost in all sql libs because
- it's a the typical case where two worlds sql and oop differ.
+ maps are row to dto/class; but one-to-many relationships are always tricky to do in almost all sql libs because
+ it's the typical case where two worlds, sql and oop, differ.
 
 Let's see an example in action to understand the problem, given this query on our schema:
 ```sql
@@ -498,13 +498,43 @@ order by "public"."todo_list"."created" desc
 ``` 
  
 ##### Exposed
-
+It is pretty straight forward and close to the real sql to do subquerying with Exposed: 
+```kotlin
+val notCompleted = TodoLists
+            .leftJoin(Tasks)
+            .slice(TodoLists.id)
+            .select { Tasks.status.castTo<String>(VarCharColumnType()) eq TaskStatus.TODO.name }
+TodoLists
+    .leftJoin(Tasks)
+    .select(where = { TodoLists.id inSubQuery notCompleted })
+    .orderBy(TodoLists.created, SortOrder.DESC)
+    .toList()
+    .let(::toMultipleTodoLists)
+```
 ##### Jooq
- 
+With jooq, even it is easy to do it, it becomes a bit verbose:
+ ```kotlin
+val notCompleted = jooq
+            .select(TODO_LIST.ID)
+            .distinctOn(TODO_LIST.ID)
+            .from(TODO_LIST)
+            .leftJoin(TASK)
+            .on(TASK.TODO_LIST_ID.eq(TODO_LIST.ID))
+            .where(TASK.STATUS.eq(TaskStatus.TODO))
+jooq.select()
+    .from(TODO_LIST)
+    .leftJoin(TASK)
+    .on(TASK.TODO_LIST_ID.eq(TODO_LIST.ID))
+    .where(TASK.TODO_LIST_ID.`in`(notCompleted))
+    .orderBy(TODO_LIST.CREATED.desc())
+    .fetchGroups(TODO_LIST)
+    .mapValues { it.value.into(TASK).toList() }
+    .map { (todoListRecord, taskRecords) -> TodoListDomainMapper.toTodoList(todoListRecord, taskRecords) }
+ ```
+
 #### Dynamic querying
 
 ##### Exposed
 
 ##### Jooq
  https://blog.jooq.org/tag/query-dsl/
-  
