@@ -1,5 +1,36 @@
 # Kotlin sql libs comparison
 
+- [Kotlin sql libs comparison](#kotlin-sql-libs-comparison)
+  * [Description](#description)
+    + [Challenge](#challenge)
+  * [DSL vs ORM](#dsl-vs-orm)
+    + [Approach](#approach)
+    + [Project Stack](#project-stack)
+  * [Project Structure](#project-structure)
+  * [Developing](#developing)
+    + [Running](#running)
+    + [Collaborating](#collaborating)
+  * [Libs Comparison](#libs-comparison)
+    + [Database mapping](#database-mapping)
+      - [Exposed](#exposed)
+      - [Jooq](#jooq)
+    + [DSL](#dsl)
+      - [Exposed](#exposed-1)
+      - [Jooq](#jooq-1)
+    + [Mapping back results: Type safety](#mapping-back-results--type-safety)
+      - [Exposed](#exposed-2)
+      - [Jooq](#jooq-2)
+    + [Querying](#querying)
+      - [One to Many relationships](#one-to-many-relationships)
+        * [Exposed](#exposed-3)
+        * [Jooq](#jooq-3)
+      - [Sub-querying](#sub-querying)
+        * [Exposed](#exposed-4)
+        * [Jooq](#jooq-4)
+      - [Dynamic querying](#dynamic-querying)
+        * [Exposed](#exposed-5)
+        * [Jooq](#jooq-5)
+
 ## Description
 
 The idea of this project is to compare and see advantages and disadvantages of different SQL libs when they are used
